@@ -25,8 +25,20 @@ router.get('/fetchProducts', CommonController.fetchProducts as any);
 
 router.get('/fetchAllProducts', CommonController.fetchAllProducts as any);
 
+router.get('/fetchOrders', CommonController.fetchOrders as any);
+
+router.get('/fetchAllUsers', CommonController.fetchAllUsers as any);
+
+router.get('/fetchCustomerIssues', CommonController.fetchCustomerIssues as any);
+
+router.get("/getDashboardStats", CommonController.getStats as any);
+router.get("/getRecentOrders", CommonController.getRecentOrders as any);
+router.get("/getPendingIssues", CommonController.getPendingIssues as any);
+
+
 router.post('/addProduct',upload.single("image"),  CommonController.addProduct as any);
 
 router.post('/deleteProduct', CommonController.deleteProducts as any);
 
+router.post('/bulkUploadProducts', upload.single("file"), CommonController.bulkUploadProducts as any);
 export default router;

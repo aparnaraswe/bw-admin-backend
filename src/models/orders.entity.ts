@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from "typeorm";
 import { OrderItem } from "./order_items.entity";
+import User from "./user.entity";
 
 @Entity({ name: "orders" })
 export class Order {
@@ -16,8 +19,10 @@ export class Order {
   @Column({ type: "varchar", unique: true })
   order_number: string;
 
-  @Column({ type: "varchar", length: 100 })
-  user_id: string;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: "user_id" })
+  user: User;
+
 
   @Column({ type: "decimal", precision: 10, scale: 2 })
   total_amount: number;

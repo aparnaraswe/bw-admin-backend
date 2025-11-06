@@ -15,9 +15,14 @@ const ProductionRoutes: IRoutes[] = [
         route: user
     },
     {
+        path: "/cad",
+        route: common
+    },
+    {
         path: "/product",
         route: common
-    }
+    },
+   
    
 ];
 
