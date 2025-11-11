@@ -5,8 +5,8 @@ import Products from "../models/product.entity";
 import ProductVariant from "../models/product-varient.entity";
 import colour from "../models/colour.entitity";
 import size from "../models/size.entity";
-import category from "../models/category.entity";
-import subcategory from "../models/subcategory.entity";
+import categoryRepo from "../models/category.entity";
+import subcategoryRepo from "../models/subcategory.entity";
 import { cadSchema, productSchema, stackSchema } from "../validations/productValidation";
 import * as fs from "fs";
 import * as csv from "fast-csv";
@@ -21,15 +21,15 @@ export default class CommonController{
 
       const colourRepo = AppDataSource.getRepository(colour);
       const sizeRepo = AppDataSource.getRepository(size);
-      const categoryRepo = AppDataSource.getRepository(category);
-      const subCategoryRepo = AppDataSource.getRepository(subcategory);
+      const categoryRepository = AppDataSource.getRepository(categoryRepo);
+      const subCategoryRepository = AppDataSource.getRepository(subcategoryRepo);
 
       // Fetch all lists
       const [colours, sizes, categories, subcategories] = await Promise.all([
         colourRepo.find(),
         sizeRepo.find(),
-        categoryRepo.find(),
-        subCategoryRepo.find(),
+        categoryRepository.find(),
+        subCategoryRepository.find(),
       ]);
 
       let product = null;
@@ -487,7 +487,7 @@ export default class CommonController{
       await queryRunner.connect();
 
       const sql = `
-        SELECT 
+        SELECT
           id, 
           email, 
           role,
@@ -654,6 +654,318 @@ export default class CommonController{
     }
   };
 
+    static getCategories = async (req: Request, res: Response) => {
+    try {
+      const repo = AppDataSource.getRepository(categoryRepo);
+      const categories = await repo.find({ order: { id: "DESC" } });
+      return res.status(200).json({ success: true, data: categories });
+    } catch (err) {
+      console.error("❌ Error fetching categories:", err);
+      res.status(500).json({ success: false, message: "Error fetching categories" });
+    }
+  };
+
+  // ✅ Add new category
+  static addCategory = async (req: Request, res: Response) => {
+    try {
+      const { name } = req.body;
+      if (!name?.trim()) {
+        return res.status(400).json({ success: false, message: "Category name is required" });
+      }
+
+      const repo = AppDataSource.getRepository(categoryRepo);
+      const existing = await repo.findOne({ where: { name } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: "Category already exists" });
+      }
+
+      const newCat = repo.create({ name });
+      await repo.save(newCat);
+      res.status(201).json({ success: true, message: "Category added successfully" });
+    } catch (err) {
+      console.error("❌ Error adding category:", err);
+      res.status(500).json({ success: false, message: "Error adding category" });
+    }
+  };
+
+  // ✅ Delete category (hard delete)
+  static deleteCategory = async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const repo = AppDataSource.getRepository(categoryRepo);
+
+      const category = await repo.findOne({ where: { id } });
+      if (!category) {
+        return res.status(404).json({ success: false, message: "Category not found" });
+      }
+
+      await repo.delete({ id });
+      res.status(200).json({ success: true, message: "Category deleted successfully" });
+    } catch (err) {
+      console.error("❌ Error deleting category:", err);
+      res.status(500).json({ success: false, message: "Error deleting category" });
+    }
+  };
+
+  // ✅ Toggle category active/inactive
+  static toggleCategoryStatus = async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const repo = AppDataSource.getRepository(categoryRepo);
+
+      const category = await repo.findOne({ where: { id } });
+      if (!category) {
+        return res.status(404).json({ success: false, message: "Category not found" });
+      }
+
+      category.is_active = !category.is_active;
+      await repo.save(category);
+
+      res.status(200).json({
+        success: true,
+        message: `Category ${category.is_active ? "activated" : "deactivated"} successfully`,
+      });
+    } catch (err) {
+      console.error("❌ Error toggling category:", err);
+      res.status(500).json({ success: false, message: "Error updating category status" });
+    }
+  };
+
+  /**
+   * ===========================
+   * SUBCATEGORY CONTROLLERS
+   * ===========================
+   */
+
+  // ✅ Get all subcategories
+  static getSubcategories = async (req: Request, res: Response) => {
+    try {
+      const repo = AppDataSource.getRepository(subcategoryRepo);
+      const subcategories = await repo.find({ order: { id: "DESC" } });
+      return res.status(200).json({ success: true, data: subcategories });
+    } catch (err) {
+      console.error("❌ Error fetching subcategories:", err);
+      res.status(500).json({ success: false, message: "Error fetching subcategories" });
+    }
+  };
+
+  // ✅ Add new subcategory
+  static addSubcategory = async (req: Request, res: Response) => {
+    try {
+      const { name } = req.body;
+      if (!name?.trim()) {
+        return res.status(400).json({ success: false, message: "Subcategory name is required" });
+      }
+
+      const repo = AppDataSource.getRepository(subcategoryRepo);
+      const existing = await repo.findOne({ where: { name } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: "Subcategory already exists" });
+      }
+
+      const newSub = repo.create({ name });
+      await repo.save(newSub);
+      res.status(201).json({ success: true, message: "Subcategory added successfully" });
+    } catch (err) {
+      console.error("❌ Error adding subcategory:", err);
+      res.status(500).json({ success: false, message: "Error adding subcategory" });
+    }
+  };
+
+  // ✅ Delete subcategory (hard delete)
+  static deleteSubcategory = async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const repo = AppDataSource.getRepository(subcategoryRepo);
+
+      const subcategory = await repo.findOne({ where: { id } });
+      if (!subcategory) {
+        return res.status(404).json({ success: false, message: "Subcategory not found" });
+      }
+
+      await repo.delete({ id });
+      res.status(200).json({ success: true, message: "Subcategory deleted successfully" });
+    } catch (err) {
+      console.error("❌ Error deleting subcategory:", err);
+      res.status(500).json({ success: false, message: "Error deleting subcategory" });
+    }
+  };
+
+  // ✅ Toggle subcategory active/inactive
+  static toggleSubcategoryStatus = async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const repo = AppDataSource.getRepository(subcategoryRepo);
+
+      const subcategory = await repo.findOne({ where: { id } });
+      if (!subcategory) {
+        return res.status(404).json({ success: false, message: "Subcategory not found" });
+      }
+
+      subcategory.is_active = !subcategory.is_active;
+      await repo.save(subcategory);
+
+      res.status(200).json({
+        success: true,
+        message: `Subcategory ${subcategory.is_active ? "activated" : "deactivated"} successfully`,
+      });
+    } catch (err) {
+      console.error("❌ Error toggling subcategory:", err);
+      res.status(500).json({ success: false, message: "Error updating subcategory status" });
+    }
+  };
+  static getSizes = async (req: Request, res: Response) => {
+    try {
+      const repo = AppDataSource.getRepository(size);
+      const sizes = await repo.find({ order: { id: "DESC" } });
+      return res.status(200).json({ success: true, data: sizes });
+    } catch (err) {
+      console.error("❌ Error fetching sizes:", err);
+      res.status(500).json({ success: false, message: "Error fetching sizes" });
+    }
+  };
+
+  // ✅ Add size
+  static addSize = async (req: Request, res: Response) => {
+    try {
+      const { name } = req.body;
+      if (!name?.trim()) {
+        return res.status(400).json({ success: false, message: "Size name is required" });
+      }
+
+      const repo = AppDataSource.getRepository(size);
+      const existing = await repo.findOne({ where: { name } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: "Size already exists" });
+      }
+
+      const newSize = repo.create({ name });
+      await repo.save(newSize);
+      res.status(201).json({ success: true, message: "Size added successfully" });
+    } catch (err) {
+      console.error("❌ Error adding size:", err);
+      res.status(500).json({ success: false, message: "Error adding size" });
+    }
+  };
+
+  // ✅ Delete size
+  static deleteSize = async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const repo = AppDataSource.getRepository(size);
+
+      const sizeRepo = await repo.findOne({ where: { id } });
+      if (!sizeRepo) {
+        return res.status(404).json({ success: false, message: "Size not found" });
+      }
+
+      await repo.delete({ id });
+      res.status(200).json({ success: true, message: "Size deleted successfully" });
+    } catch (err) {
+      console.error("❌ Error deleting size:", err);
+      res.status(500).json({ success: false, message: "Error deleting size" });
+    }
+  };
+
+  // ✅ Toggle size active/inactive
+  static toggleSizeStatus = async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const repo = AppDataSource.getRepository(size);
+
+      const sizeRepo = await repo.findOne({ where: { id } });
+      if (!sizeRepo) {
+        return res.status(404).json({ success: false, message: "Size not found" });
+      }
+
+      sizeRepo.is_active = !sizeRepo.is_active;
+      await repo.save(sizeRepo);
+
+      res.status(200).json({
+        success: true,
+        message: `Size ${sizeRepo.is_active ? "activated" : "deactivated"} successfully`,
+      });
+    } catch (err) {
+      console.error("❌ Error toggling size:", err);
+      res.status(500).json({ success: false, message: "Error updating size status" });
+    }
+  };
+  static getColours = async (req: Request, res: Response) => {
+    try {
+      const repo = AppDataSource.getRepository(colour);
+      const colours = await repo.find({ order: { id: "DESC" } });
+      return res.status(200).json({ success: true, data: colours });
+    } catch (err) {
+      console.error("❌ Error fetching colours:", err);
+      res.status(500).json({ success: false, message: "Error fetching colours" });
+    }
+  };
+
+  // ✅ Add new colour
+  static addColour = async (req: Request, res: Response) => {
+    try {
+      const { name, hex_code } = req.body;
+      if (!name?.trim()) {
+        return res.status(400).json({ success: false, message: "Colour name is required" });
+      }
+
+      const repo = AppDataSource.getRepository(colour);
+      const existing = await repo.findOne({ where: { name } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: "Colour already exists" });
+      }
+
+      const newColour = repo.create({ name, hex_code });
+      await repo.save(newColour);
+      res.status(201).json({ success: true, message: "Colour added successfully" });
+    } catch (err) {
+      console.error("❌ Error adding colour:", err);
+      res.status(500).json({ success: false, message: "Error adding colour" });
+    }
+  };
+
+  // ✅ Delete colour
+  static deleteColour = async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const repo = AppDataSource.getRepository(colour);
+
+      const colourRepo = await repo.findOne({ where: { id } });
+      if (!colourRepo) {
+        return res.status(404).json({ success: false, message: "Colour not found" });
+      }
+
+      await repo.delete({ id });
+      res.status(200).json({ success: true, message: "Colour deleted successfully" });
+    } catch (err) {
+      console.error("❌ Error deleting colour:", err);
+      res.status(500).json({ success: false, message: "Error deleting colour" });
+    }
+  };
+
+  // ✅ Toggle colour active/inactive
+  static toggleColourStatus = async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const repo = AppDataSource.getRepository(colour);
+
+      const colourRepo = await repo.findOne({ where: { id } });
+      if (!colourRepo) {
+        return res.status(404).json({ success: false, message: "Colour not found" });
+      }
+
+      colourRepo.is_active = !colourRepo.is_active;
+      await repo.save(colourRepo);
+
+      res.status(200).json({
+        success: true,
+        message: `Colour ${colourRepo.is_active ? "activated" : "deactivated"} successfully`,
+      });
+    } catch (err) {
+      console.error("❌ Error toggling colour:", err);
+      res.status(500).json({ success: false, message: "Error updating colour status" });
+    }
+  };
 
 
 }

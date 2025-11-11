@@ -34,6 +34,26 @@ router.get('/fetchCustomerIssues', CommonController.fetchCustomerIssues as any);
 router.get("/getDashboardStats", CommonController.getStats as any);
 router.get("/getRecentOrders", CommonController.getRecentOrders as any);
 router.get("/getPendingIssues", CommonController.getPendingIssues as any);
+router.get("/categories", CommonController.getCategories as any);
+router.post("/categories", CommonController.addCategory as any);
+router.delete("/categories/:id", CommonController.deleteCategory as any);
+
+// Subcategories
+router.get("/subcategories", CommonController.getSubcategories as any);
+router.post("/subcategories", CommonController.addSubcategory as any);
+router.delete("/subcategories/:id", CommonController.deleteSubcategory as any);
+
+
+router.get("/sizes", CommonController.getSizes as any);
+router.post("/sizes", CommonController.addSize as any);
+router.delete("/sizes/:id", CommonController.deleteSize as any);
+router.patch("/sizes/:id/toggle", CommonController.toggleSizeStatus as any);
+
+
+router.get("/colours", CommonController.getColours as any);
+router.post("/colours", CommonController.addColour as any);
+router.delete("/colours/:id", CommonController.deleteColour as any);
+router.patch("/colours/:id/toggle", CommonController.toggleColourStatus as any);
 
 
 router.post('/addProduct',upload.single("image"),  CommonController.addProduct as any);

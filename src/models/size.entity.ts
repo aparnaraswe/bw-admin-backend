@@ -15,6 +15,9 @@ export default class size {
   @Column({ unique: true })
   name: string;
 
+  @Column({ type: "boolean", default: true })
+  is_active: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

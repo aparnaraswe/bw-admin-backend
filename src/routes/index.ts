@@ -1,6 +1,7 @@
 import { Router } from "express";
 import user from "./user.route";
 import common from "./common.route";
+import usercommon from "./usercommon.route"
 
 
 const router = Router();
@@ -22,6 +23,10 @@ const ProductionRoutes: IRoutes[] = [
         path: "/product",
         route: common
     },
+    {
+        path : "/usercommon",
+        route: usercommon
+    }
    
    
 ];
